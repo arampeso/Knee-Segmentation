@@ -1,0 +1,13 @@
+xrays,masks
+data/xrays/0.png,data/masks/0.png
+data/xrays/3.png,data/masks/3.png
+data/xrays/13.png,data/masks/13.png
+data/xrays/15.png,data/masks/15.png
+data/xrays/19.png,data/masks/19.png
+data/xrays/23.png,data/masks/23.png
+data/xrays/31.png,data/masks/31.png
+data/xrays/63.png,data/masks/63.png
+data/xrays/64.png,data/masks/64.png
+data/xrays/69.png,data/masks/69.png
+data/xrays/72.png,data/masks/72.png
+data/xrays/73.png,data/masks/73.png
