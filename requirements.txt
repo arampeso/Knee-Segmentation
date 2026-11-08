@@ -1,0 +1,11 @@
+matplotlib
+natsort
+numpy
+opencv-python
+pandas
+Pillow
+jupyter
+segmentation-models-pytorch
+torch
+torchmetrics
+tqdm
