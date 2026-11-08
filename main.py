@@ -8,6 +8,7 @@ from src.dataset import KneeDataset
 from src.model import MyModel
 from src.trainer import train_and_validate
 from src.utils import get_device, save_loss_plot
+from src.utils import save_and_print_metrics
 
 device = get_device()
 print(f"Training on {device}")
@@ -58,23 +59,7 @@ def main():
     )
 
     # --------------- 7. save and print train/validation metrics ---------------
-    history = results["history"]
-    metrics_df = pd.DataFrame(
-        {
-            "epoch": range(1, len(history["train_loss"]) + 1),
-            "train_loss": history["train_loss"],
-            "val_loss": history["val_loss"],
-            "val_dice": history["val_dice"],
-            "val_iou": history["val_iou"],
-        }
-    )
-    metrics_path = os.path.join(args.out_dir, "training_metrics.csv")
-    metrics_df.to_csv(metrics_path, index=False)
-
-    saved_metrics_df = pd.read_csv(metrics_path)
-    print(f"\nTraining and validation metrics ({metrics_path}):")
-    print(saved_metrics_df.to_string(index=False))
-    print(f"\nBest validation epoch: {results['best_epoch']}")
+    save_and_print_metrics(results["history"], args.out_dir, results["best_epoch"])
     print(f"Loss plot saved to: {loss_plot_path}")
     print(f"Checkpoint saved to: {os.path.join(args.out_dir, 'best_model_split_train.pth')}")
 
