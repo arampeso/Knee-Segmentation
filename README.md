@@ -10,16 +10,24 @@ This project was developed as part of the **Machine Vision and Convolutional Neu
 │   ├── xrays/             # X-ray images
 │   ├── masks/             # corresponding segmentation masks
 │   └── csv/               # generated dataset splits
+│
 ├── src/
 │   ├── args.py            # command-line arguments
 │   ├── dataset.py         # image and mask loading and preprocessing
 │   ├── model.py           # U-Net model
 │   ├── trainer.py         # training and validation loops
 │   └── utils.py           # device selection, metrics, and loss plot
+│
+├── sessions/              # training and evaluation outputs
+│   ├── best_model.pth     # best model checkpoint
+│   ├── training_metrics.csv
+│   ├── loss_curve_split_train.png
+│   └── mask_overlays/     # predicted overlays for test images
+│
 ├── data_preperation.py    # generate CSV files and dataset splits
 ├── main.py                # start model training
 ├── requirements.txt
-└── evaluate.ipynb          # evaluation notebook
+└── evaluate.ipynb         # evaluation notebook
 ```
 
 ## Overview
@@ -104,8 +112,6 @@ You can override arguments when starting the script. For example:
 python main.py -epochs 50 -bs 8 -lr 0.001 -wd 0.00001 -out_dir sessions/experiment_1
 ```
 
-The allowed values for `-lr` are `0.01`, `0.001`, `0.0001`, and `0.000001`. The allowed values for `-wd` are `0.00001` and `0.0000001`. Note that each argument uses a single hyphen.
-
 The model is evaluated on the validation dataset after every epoch. A `StepLR` scheduler halves the learning rate every 10 epochs (`gamma=0.5`).
 
 ## Outputs
@@ -117,6 +123,9 @@ The output directory (default: `sessions/`) contains:
 | `best_model.pth` | Model weights from the epoch with the lowest validation loss |
 | `training_metrics.csv` | Training and validation loss, plus validation Dice and IoU for each epoch |
 | `loss_curve_split_train.png` | Plot of training and validation loss |
+| `mask_overlays/` | Predicted mask overlays for the test images, saved by `evaluate.ipynb` |
+
+Run the cells in `evaluate.ipynb` to generate the overlays. Each PNG in `sessions/mask_overlays/` uses the corresponding test X-ray's filename stem, so the image index is preserved.
 
 The checkpoint contains the model's `state_dict`, not the complete model object or the optimizer state. To use it later, instantiate the same model (`MyModel`) and load the saved `state_dict`.
 
