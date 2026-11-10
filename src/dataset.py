@@ -1,6 +1,9 @@
 from torch.utils.data import Dataset
+import torch
 import numpy as np
 from PIL import Image
+from torchvision import tv_tensors
+from torchvision.transforms import InterpolationMode, v2
 
 
 def _read_grayscale(path):
@@ -31,18 +34,37 @@ def read_mask(path):
 class KneeDataset(Dataset):
     """Dataset of knee X-rays and their segmentation masks, based on a DataFrame."""
 
-    def __init__(self, df):
-        self.df = df
+    def __init__(self, dataset, should_augment=False):
+        self.dataset = dataset
+        self.should_augment = should_augment
+
+        self.augmentation = v2.Compose([
+            v2.RandomHorizontalFlip(p=0.5),
+            v2.RandomAffine(
+                degrees=7,
+                translate=(0.04, 0.04),
+                scale=(0.95, 1.05),
+                interpolation=InterpolationMode.BILINEAR,
+            )
+        ])
 
     def __len__(self):
-        return len(self.df)
+        return len(self.dataset)
 
     def __getitem__(self, index):
-        xray = self.df["xrays"].iloc[index]
-        mask = self.df["masks"].iloc[index]
+        xray = self.dataset["xrays"].iloc[index]
+        mask = self.dataset["masks"].iloc[index]
 
-        xray_image = read_xray(xray)
-        mask_image = read_mask(mask)
+        xray_image = torch.from_numpy(read_xray(xray))
+        mask_image = torch.from_numpy(read_mask(mask))
+
+        if self.should_augment:
+            xray_image, mask_image = self.augmentation(
+                tv_tensors.Image(xray_image),
+                tv_tensors.Mask(mask_image),
+            )
+            xray_image = xray_image.as_subclass(torch.Tensor)
+            mask_image = mask_image.as_subclass(torch.Tensor)
 
         res = {
             "xray": xray_image,

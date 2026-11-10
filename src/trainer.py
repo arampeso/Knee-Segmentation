@@ -9,8 +9,8 @@ from tqdm import tqdm
 
 def _get_batch(batch, device):
     """Move a segmentation batch to the selected device."""
-    inputs = batch["xray"].to(device=device, dtype=torch.float32)
-    labels = batch["mask"].to(device=device, dtype=torch.float32)
+    inputs = batch["xray"].to(device=device)
+    labels = batch["mask"].to(device=device)
     return inputs, labels
 
 

@@ -22,8 +22,8 @@ def main():
     val_set = pd.read_csv(os.path.join(args.csv_dir, "val.csv"))
 
     # ---------------3. define datasets ---------------
-    train_dataset = KneeDataset(train_set)
-    val_dataset = KneeDataset(val_set)
+    train_dataset = KneeDataset(train_set, should_augment=True)
+    val_dataset = KneeDataset(val_set, should_augment=False)
 
     # --------------- 4. define dataloaders ---------------
     train_loader = DataLoader(train_dataset, batch_size=args.bs, shuffle=True)
@@ -37,7 +37,6 @@ def main():
         lr = args.lr,
         weight_decay=args.wd,
     )
-
 
     # --------------- 6. train and validate ---------------
     results = train_and_validate(
