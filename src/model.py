@@ -1,7 +1,7 @@
 """U-Net model backed by segmentation-models-pytorch."""
 
 from torch import Tensor, nn
-from segmentation_models_pytorch import Unet
+import segmentation_models_pytorch as smp
 
 
 class MyModel(nn.Module):
@@ -19,7 +19,7 @@ class MyModel(nn.Module):
     ) -> None:
         
         super().__init__()
-        self.unet = Unet(
+        self.unet = smp.Unet(
             encoder_name    = encoder_name,
             encoder_weights = None,
             in_channels     = in_channels,
