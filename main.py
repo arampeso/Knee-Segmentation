@@ -60,7 +60,7 @@ def main():
     # --------------- 7. save and print train/validation metrics ---------------
     save_and_print_metrics(results["history"], args.out_dir, results["best_epoch"])
     print(f"Loss plot saved to: {loss_plot_path}")
-    print(f"Checkpoint saved to: {os.path.join(args.out_dir, 'best_model_split_train.pth')}")
+    print(f"Checkpoint saved to: {os.path.join(args.out_dir, 'best_model.pth')}")
 
 
 if __name__ == "__main__":
