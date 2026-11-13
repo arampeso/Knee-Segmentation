@@ -67,7 +67,7 @@ def train_and_validate(
     best_val_dice = 0.0
     best_epoch = 0
 
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.5)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=25, gamma=0.5)
     checkpoint_path = os.path.join(out_dir, "best_model.pth")
     progress = tqdm(
         total=epochs * (len(train_loader) + len(val_loader)),
