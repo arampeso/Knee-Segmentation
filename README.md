@@ -112,7 +112,7 @@ You can override arguments when starting the script. For example:
 python main.py -epochs 50 -bs 8 -lr 0.001 -wd 0.00001 -out_dir sessions/experiment_1
 ```
 
-The model is evaluated on the validation dataset after every epoch. A `StepLR` scheduler halves the learning rate every 10 epochs (`gamma=0.5`).
+The model is evaluated on the validation dataset after every epoch. A `StepLR` scheduler halves the learning rate every 25 epochs (`gamma=0.5`).
 
 ## Outputs
 
