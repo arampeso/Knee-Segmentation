@@ -1,141 +1,110 @@
 # Knee Segmentation
 
-This project was developed as part of the **Machine Vision and Convolutional Neural Networks** course. It segments knee X-ray images by predicting a binary segmentation mask for each image.
+Binary segmentation of knee X-ray images with a U-Net. Developed for the course **Machine Vision and Convolutional Neural Networks**.
+
+| | |
+|---|---|
+| **Model** | U-Net with ResNet-34 encoder |
+| **Input** | Grayscale X-ray, 1 channel, values in `[0, 1]` |
+| **Output** | One logit per pixel (apply sigmoid for probabilities) |
+| **Loss / Optimizer** | `BCEWithLogitsLoss` / AdamW, `StepLR` (halves LR every 25 epochs) |
+| **Metrics** | Pixel-level Dice and IoU on the validation set |
+| **Device** | Automatic: MPS, CUDA or CPU |
+
+## Quick start
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+
+python data_preperation.py         # create CSV splits
+python main.py                     # train
+```
+
+Then run `evaluate.ipynb` to generate the test overlays.
 
 ## Project structure
 
 ```text
 .
 ├── data/
-│   ├── xrays/             # X-ray images
-│   ├── masks/             # corresponding segmentation masks
-│   └── csv/               # generated dataset splits
-│
+│   ├── xrays/                 # X-ray images
+│   ├── masks/                 # masks (same filenames as the images)
+│   └── csv/                   # generated splits
 ├── src/
-│   ├── args.py            # command-line arguments
-│   ├── dataset.py         # image and mask loading and preprocessing
-│   ├── model.py           # U-Net model
-│   ├── trainer.py         # training and validation loops
-│   └── utils.py           # device selection, metrics, and loss plot
-│
-├── sessions/              # training and evaluation outputs
-│   ├── best_model.pth     # best model checkpoint
-│   ├── training_metrics.csv
-│   ├── loss_curve_split_train.png
-│   └── mask_overlays/     # predicted overlays for test images
-│
-├── data_preperation.py    # generate CSV files and dataset splits
-├── main.py                # start model training
-├── requirements.txt
-└── evaluate.ipynb         # evaluation notebook
+│   ├── args.py                # command-line arguments
+│   ├── dataset.py             # loading and preprocessing
+│   ├── model.py               # U-Net
+│   ├── trainer.py             # training and validation loops
+│   └── utils.py               # device, metrics, loss plot
+├── sessions/                  # outputs (see below)
+├── data_preperation.py        # create dataset splits
+├── main.py                    # start training
+├── evaluate.ipynb             # evaluation notebook
+└── requirements.txt
 ```
 
-## Overview
+## Data
 
-- **Model:** U-Net with a ResNet-34 encoder
-- **Input:** grayscale X-ray image with a single image channel
-- **Output:** one logit per pixel; apply sigmoid to obtain probabilities
-- **Loss:** `BCEWithLogitsLoss`
-- **Optimizer:** AdamW
-- **Metrics:** pixel-level Dice score and IoU on the validation dataset
-- **Device selection:** automatically uses MPS, CUDA, or CPU, depending on availability
+Put images in `data/xrays/` and masks in `data/masks/`. Each labeled image needs a mask with the **same filename** (e.g. `0.png` in both folders).
 
-## Installation
+`data_preperation.py` writes `data/csv/dataset.csv` and splits it:
 
-Clone the repository and change into the project directory. Then create a virtual environment and install the dependencies:
+| Split | Content | File |
+|---|---|---|
+| Train | 80 % of labeled images (fixed seed) | `train.csv` |
+| Validation | 20 % of labeled images | `val.csv` |
+| Test | Images without a mask | `test.csv` |
 
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-```
+Each CSV has the columns `xrays` and `masks`. `main.py` only uses `train.csv` and `val.csv`.
 
-On Windows, activate the environment instead with:
-
-```powershell
-.venv\Scripts\activate
-```
-
-## Prepare the data
-
-Place the images and masks in `data/xrays/` and `data/masks/`, respectively. Each labeled X-ray must have a mask with the **same filename**. For example:
-
-```text
-data/
-├── xrays/
-│   ├── 0.png
-│   └── 1.png
-└── masks/
-    ├── 0.png
-    └── 1.png
-```
-
-Run the preparation script from the project directory:
-
-```bash
-python data_preperation.py
-```
-
-The script creates `data/csv/dataset.csv` and splits the data:
-
-- Labeled images are split into **80% training** and **20% validation**, using a fixed random seed.
-- Images without a corresponding mask are assigned to the **test set**.
-- The splits are saved as `data/csv/train.csv`, `val.csv`, and `test.csv`.
-
-Each CSV file contains the columns `xrays` and `masks`, which point to the respective image files. `main.py` uses the training and validation CSV files, so the training data must include masks.
-
-Images are loaded as grayscale. Transparent regions are composited onto a black background. X-ray pixel values are normalized to `[0, 1]`; masks are converted to binary values `0` and `1` using the condition `pixel value > 0`.
+**Preprocessing:** images are loaded as grayscale, transparent areas are composited onto black, X-rays are scaled to `[0, 1]`, and masks are binarized with `pixel value > 0`.
 
 ## Training
-
-Start training with the default settings:
 
 ```bash
 python main.py
 ```
 
-The default arguments are:
-
 | Argument | Default | Description |
 |---|---:|---|
-| `-csv_dir` | `data/csv` | Directory containing `train.csv` and `val.csv` |
-| `-out_dir` | `sessions` | Directory for the checkpoint and training outputs |
+| `-csv_dir` | `data/csv` | Folder with `train.csv` and `val.csv` |
+| `-out_dir` | `sessions` | Output folder |
 | `-epochs` | `30` | Number of epochs |
 | `-bs` | `16` | Batch size |
-| `-lr` | `0.0001` | Learning rate for AdamW |
-| `-wd` | `0.00001` | Weight decay for AdamW |
+| `-lr` | `0.0001` | Learning rate (AdamW) |
+| `-wd` | `0.00001` | Weight decay (AdamW) |
 
-You can override arguments when starting the script. For example:
+Example with custom settings:
 
 ```bash
-python main.py -epochs 50 -bs 8 -lr 0.001 -wd 0.00001 -out_dir sessions/experiment_1
+python main.py -epochs 50 -bs 8 -lr 0.001 -out_dir sessions/experiment_1
 ```
 
-The model is evaluated on the validation dataset after every epoch. A `StepLR` scheduler halves the learning rate every 25 epochs (`gamma=0.5`).
+The model is validated after every epoch.
 
 ## Outputs
 
-The output directory (default: `sessions/`) contains:
-
-| File | Contents |
+| File | Content |
 |---|---|
-| `best_model.pth` | Model weights from the epoch with the lowest validation loss |
-| `training_metrics.csv` | Training and validation loss, plus validation Dice and IoU for each epoch |
-| `loss_curve_split_train.png` | Plot of training and validation loss |
-| `mask_overlays/` | Predicted mask overlays for the test images, saved by `evaluate.ipynb` |
+| `best_model.pth` | `state_dict` of the epoch with the lowest validation loss |
+| `training_metrics.csv` | Train/val loss, val Dice and IoU per epoch |
+| `loss_curve_split_train.png` | Loss plot |
+| `mask_overlays/` | Predicted overlays for test images (from `evaluate.ipynb`), named after the image filename |
 
-Run the cells in `evaluate.ipynb` to generate the overlays. Each PNG in `sessions/mask_overlays/` uses the corresponding test X-ray's filename stem, so the image index is preserved.
-
-The checkpoint contains the model's `state_dict`, not the complete model object or the optimizer state. To use it later, instantiate the same model (`MyModel`) and load the saved `state_dict`.
+The checkpoint contains only the `state_dict` (no full model, no optimizer state). To reuse it, create a `MyModel` instance and load the weights.
 
 ## Metrics
 
-- **Dice:** pixel-level F1 score. Values closer to `1` indicate greater overlap between the prediction and the ground-truth mask.
-- **IoU:** pixel-level Intersection over Union. As with Dice, values closer to `1` indicate greater overlap.
-- For both metrics, prediction logits are first converted to probabilities with sigmoid and then binarized at a threshold of `0.5`.
+Logits are passed through sigmoid and binarized at `0.5`.
 
+- **Dice:** pixel-level F1 score
+- **IoU:** pixel-level Intersection over Union
 
-#
-###
+Both range from 0 to 1; higher means more overlap with the ground truth.
+
+---
+
 *Aram Cheechow Peso*
