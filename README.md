@@ -10,6 +10,7 @@ Binary segmentation of knee X-ray images with a U-Net. Developed for the course 
 | **Loss / Optimizer** | `BCEWithLogitsLoss` / AdamW, `StepLR` (halves LR every 25 epochs) |
 | **Metrics** | Pixel-level Dice and IoU on the validation set |
 | **Device** | Automatic: MPS, CUDA or CPU |
+| **License** | U-Net: MIT; ResNet-34 encoder: BSD-3-Clause |
 
 ## Quick start
 
@@ -104,6 +105,18 @@ Logits are passed through sigmoid and binarized at `0.5`.
 - **IoU:** pixel-level Intersection over Union
 
 Both range from 0 to 1; higher means more overlap with the ground truth.
+
+## Model license
+
+The U-Net implementation is provided by
+[segmentation_models.pytorch](https://github.com/qubvel-org/segmentation_models.pytorch),
+which is licensed under the [MIT License](https://github.com/qubvel-org/segmentation_models.pytorch/blob/main/LICENSE).
+The ResNet-34 encoder implementation comes from
+[torchvision](https://github.com/pytorch/vision), which is licensed under the
+[BSD 3-Clause License](https://github.com/pytorch/vision/blob/main/LICENSE).
+
+The encoder is initialized without pretrained weights (`encoder_weights=None`),
+so no pretrained third-party model weights are used in this project.
 
 ---
 
